@@ -1,5 +1,8 @@
 import requests
-import csv  
+import csv 
+import datetime
+
+assert __name__ != "__main__", "cannot be accessed directly"
 
 # Replace with your actual API key
 api_key = "96c9a13f-f3bd-43eb-80b1-00649a66c046"
@@ -20,22 +23,48 @@ parameters = {
 
 def cpc_main():
 
-    assert __name__ != "__main__"
     # Make the request
     response = requests.get(url, headers=headers, params=parameters)
     response.raise_for_status()  # Raise HTTPError for bad responses
-    data = response.json()  # Parse JSON response
-    # for coin in data["data"]:
-    #     print(f"Name: {coin['name']}, Symbol: {coin['symbol']}, Price: ${coin['quote']['USD']['price']}, Price Change (24 hr): {coin['quote']['USD']['percent_change_24h']}, Volume (24 hr): {coin['quote']['USD']['volume_24h']}, Market Cap: {coin['quote']['USD']['market_cap']}")
-    #     print(f"Name: {coin['name']}, Market Cap: {coin['quote']['USD']['market_cap']}")
+    info = response.json()  # Parse JSON response
+    data = info["data"]
 
     list_2D = [["Name", "Symbol", "Price", "Price Change (24 hr)", "Volume (24 hr)", "Market Cap"]]
-
-    for coin in data["data"]:
+    prices = []
+    pc_24 = []
+    for coin in data:
         entry = [coin['name'],coin['symbol'],coin['quote']['USD']['price'],coin['quote']['USD']['percent_change_24h'],coin['quote']['USD']['volume_24h'],coin['quote']['USD']['market_cap']]
         list_2D.append(entry)
+        prices.append(coin['quote']['USD']['price'])
+        pc_24.append(coin['quote']['USD']['percent_change_24h'])
+    
+    top_five_by_MC = [["Rank","Name", "Symbol", "Price", "Price Change (24 hr)", "Volume (24 hr)", "Market Cap"]]
+    for i in range(1,6):
+        top_five_by_MC.append([i]+list_2D[i])
+    
+    min = max = 0
+    for val in range(len(pc_24)):
+        if abs(pc_24[i]) < abs(pc_24[min]):
+            min = i
+        if abs(pc_24[i]) > abs(pc_24[max]):
+            max = i
 
-    # Writing each inner list as a row in the CSV file
-    with open("coin_data.csv", "w", newline="") as csvfile:
-        writer = csv.writer(csvfile)
-        writer.writerows(list_2D)  # Write all rows from the 2D list
+    with open("coin_data.csv", "w", newline="") as file:
+
+        writer = csv.writer(file)
+        
+        writer.writerow([f"most recent timestamp: {datetime.datetime.now()}"])
+        writer.writerow([])
+
+        writer.writerows(list_2D) 
+
+        writer.writerow([])
+        writer.writerow(["Top five by market capitalization:"])
+        writer.writerows(top_five_by_MC)
+
+        writer.writerow([])
+        writer.writerow([f"Current average price (USD) of top 50 cryptocurrencies: {sum(prices)/50}"])
+
+        writer.writerow([])
+        writer.writerow([f"Cryptocurrency with highest price change: {list_2D[max+1][0]}, {list_2D[min+1][1]}, {list_2D[min+1][3]}"])
+        writer.writerow([f"Cryptocurrency with lowest price change: {list_2D[min+1][0]}, {list_2D[min+1][1]}, {list_2D[min+1][3]}"]) 

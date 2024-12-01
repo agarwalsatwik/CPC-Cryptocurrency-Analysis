@@ -2,7 +2,7 @@ import time
 import CPC
 
 counter = 0
-run_count = 5
+run_count = 1
 interval = 5 #seconds
 
 while (counter < run_count):
@@ -11,4 +11,4 @@ while (counter < run_count):
     time.sleep(interval)
     print(f"run: {counter}")
 
-print (f"executed {run_count} times, every {interval} seconds")
+print(f"executed {run_count} times, every {interval} seconds")
